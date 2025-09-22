@@ -713,8 +713,11 @@ create_dashboard_html() {
                 </div>
                 <div class="col-md-8">
                     <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-history"></i> Histórico de Acessos
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-history"></i> Histórico de Acessos</span>
+                            <button class="btn btn-sm btn-outline-primary" data-action="export-pdf">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -751,6 +754,8 @@ create_dashboard_html() {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script>
         // Navegação por hash + alternância de páginas
         function showPage(pageName, linkElement) {
@@ -877,8 +882,58 @@ create_dashboard_html() {
                     }
                     return;
                 }
+
+                if (action === 'export-pdf') {
+                    exportRelatoriosPDF();
+                    return;
+                }
             });
         });
+
+        // Exporta a seção de Relatórios para PDF
+        async function exportRelatoriosPDF() {
+            var relatorios = document.getElementById('relatorios-page');
+            if (!relatorios) {
+                alert('Seção de Relatórios não encontrada.');
+                return;
+            }
+            // Garante que a página de relatórios esteja visível para captura
+            var previousHash = window.location.hash;
+            var needSwitch = !relatorios.classList.contains('active');
+            if (needSwitch) {
+                showPage('relatorios');
+                await new Promise(function(r){ setTimeout(r, 200); });
+            }
+            try {
+                var canvas = await html2canvas(relatorios, { scale: 2, backgroundColor: '#ffffff' });
+                var imgData = canvas.toDataURL('image/png');
+                var pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                var pageWidth = pdf.internal.pageSize.getWidth();
+                var pageHeight = pdf.internal.pageSize.getHeight();
+                var imgWidth = pageWidth;
+                var imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                var y = 0;
+                while (y < imgHeight) {
+                    pdf.addImage(imgData, 'PNG', 0, -y, imgWidth, imgHeight);
+                    y += pageHeight;
+                    if (y < imgHeight) pdf.addPage();
+                }
+                pdf.save('relatorios-openvpn-audit.pdf');
+            } catch (err) {
+                console.error(err);
+                alert('Falha ao gerar PDF. Veja o console para detalhes.');
+            } finally {
+                if (needSwitch) {
+                    // Restaura a página anterior
+                    if (previousHash) {
+                        showPage(previousHash.replace('#', ''));
+                    } else {
+                        showPage('dashboard');
+                    }
+                }
+            }
+        }
     </script>
 </body>
 </html>
