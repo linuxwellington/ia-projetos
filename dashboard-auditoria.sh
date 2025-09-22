@@ -479,7 +479,7 @@ create_dashboard_html() {
                     <p class="text-muted">Cadastro e gerenciamento de usuários OpenVPN</p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <button class="btn btn-primary">
+                    <button class="btn btn-primary" data-action="new-user">
                         <i class="fas fa-plus"></i> Novo Usuário
                     </button>
                 </div>
@@ -504,7 +504,7 @@ create_dashboard_html() {
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="usuarios-tbody">
                                         <tr>
                                             <td>carlos.silva</td>
                                             <td>OS-12345</td>
@@ -512,10 +512,10 @@ create_dashboard_html() {
                                             <td>31/12/2023</td>
                                             <td><span class="status-badge status-ok">Ativo</span></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-primary me-1">
+                                                <button class="btn btn-sm btn-outline-primary me-1" data-action="edit-user">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger">
+                                                <button class="btn btn-sm btn-outline-danger" data-action="delete-user">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -527,10 +527,10 @@ create_dashboard_html() {
                                             <td>03/01/2024</td>
                                             <td><span class="status-badge status-ok">Ativo</span></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-primary me-1">
+                                                <button class="btn btn-sm btn-outline-primary me-1" data-action="edit-user">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger">
+                                                <button class="btn btn-sm btn-outline-danger" data-action="delete-user">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -772,12 +772,65 @@ create_dashboard_html() {
                 var btn = e.target.closest('button[data-action]');
                 if (!btn) return;
                 var action = btn.getAttribute('data-action');
+
                 if (action === 'desativar-usuario') {
                     alert('Usuário desativado (simulação).');
-                } else if (action === 'editar-usuario') {
-                    alert('Abrindo edição do usuário (simulação).');
-                } else if (action === 'lembrar-usuario') {
+                    return;
+                }
+
+                if (action === 'lembrar-usuario') {
                     alert('Lembrete enviado (simulação).');
+                    return;
+                }
+
+                // Ações Gestão de Usuários
+                if (action === 'new-user') {
+                    var login = prompt('Login do usuário:');
+                    if (!login) return;
+                    var os = prompt('Numero da OS:');
+                    var dataInicio = prompt('Data Início (DD/MM/AAAA):', '01/01/2024');
+                    var dataFim = prompt('Data Fim (DD/MM/AAAA):', '31/12/2024');
+                    var status = prompt('Status (Ativo/Inativo):', 'Ativo');
+                    var tbody = document.getElementById('usuarios-tbody');
+                    if (!tbody) return;
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = '\n                        <td>' + login + '</td>\n                        <td>' + (os || '-') + '</td>\n                        <td>' + (dataInicio || '-') + '</td>\n                        <td>' + (dataFim || '-') + '</td>\n                        <td><span class="status-badge ' + (status === 'Ativo' ? 'status-ok' : 'status-pendente') + '">' + status + '</span></td>\n                        <td>\n                            <button class="btn btn-sm btn-outline-primary me-1" data-action="edit-user">\n                                <i class="fas fa-edit"></i>\n                            </button>\n                            <button class="btn btn-sm btn-outline-danger" data-action="delete-user">\n                                <i class="fas fa-trash"></i>\n                            </button>\n                        </td>\n                    ';
+                    tbody.appendChild(tr);
+                    return;
+                }
+
+                if (action === 'edit-user') {
+                    var row = btn.closest('tr');
+                    if (!row) return;
+                    var cells = row.querySelectorAll('td');
+                    var login = prompt('Login do usuário:', cells[0].textContent.trim());
+                    var os = prompt('Numero da OS:', cells[1].textContent.trim());
+                    var dataInicio = prompt('Data Início (DD/MM/AAAA):', cells[2].textContent.trim());
+                    var dataFim = prompt('Data Fim (DD/MM/AAAA):', cells[3].textContent.trim());
+                    var statusAtual = row.querySelector('.status-badge')?.textContent.trim() || 'Ativo';
+                    var status = prompt('Status (Ativo/Inativo):', statusAtual);
+                    if (login) cells[0].textContent = login;
+                    if (os) cells[1].textContent = os;
+                    if (dataInicio) cells[2].textContent = dataInicio;
+                    if (dataFim) cells[3].textContent = dataFim;
+                    if (status) {
+                        var badge = row.querySelector('.status-badge');
+                        if (badge) {
+                            badge.textContent = status;
+                            badge.classList.remove('status-ok', 'status-pendente');
+                            badge.classList.add(status === 'Ativo' ? 'status-ok' : 'status-pendente');
+                        }
+                    }
+                    return;
+                }
+
+                if (action === 'delete-user') {
+                    var row = btn.closest('tr');
+                    if (!row) return;
+                    if (confirm('Confirma excluir este usuário?')) {
+                        row.remove();
+                    }
+                    return;
                 }
             });
         });
