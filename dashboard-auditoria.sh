@@ -412,28 +412,28 @@ create_dashboard_html() {
                 <div class="col-md-3">
                     <div class="card stat-card">
                         <i class="fas fa-users fa-2x text-primary mb-2"></i>
-                        <div class="stat-number">42</div>
+                        <div id="total-users-count" class="stat-number">0</div>
                         <div class="stat-label">Total de Usuários</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card stat-card">
                         <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                        <div class="stat-number">31</div>
+                        <div id="docs-ok-count" class="stat-number">0</div>
                         <div class="stat-label">Documentação OK</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card stat-card">
                         <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
-                        <div class="stat-number">8</div>
+                        <div id="pendentes-count" class="stat-number">0</div>
                         <div class="stat-label">Pendentes</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card stat-card">
                         <i class="fas fa-calendar-times fa-2x text-danger mb-2"></i>
-                        <div class="stat-number">3</div>
+                        <div id="expirados-count" class="stat-number">0</div>
                         <div class="stat-label">Expirados</div>
                     </div>
                 </div>
@@ -458,7 +458,7 @@ create_dashboard_html() {
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="dashboard-users-tbody">
                                         <tr class="expired-row">
                                             <td>carlos.silva</td>
                                             <td>01/01/2023</td>
@@ -592,7 +592,7 @@ create_dashboard_html() {
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label">Selecione o usuário</label>
-                                <select class="form-select">
+                                        <select id="doc-user" class="form-select">
                                     <option>Carlos Silva</option>
                                     <option>Maria Oliveira</option>
                                     <option>João Santos</option>
@@ -600,7 +600,7 @@ create_dashboard_html() {
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Tipo de documento</label>
-                                <select class="form-select">
+                                        <select id="doc-type" class="form-select">
                                     <option>RG/CPF</option>
                                     <option>CNH</option>
                                     <option>Documento Assinado</option>
@@ -608,9 +608,9 @@ create_dashboard_html() {
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Arquivo</label>
-                                <input type="file" class="form-control">
+                                        <input id="doc-file" type="file" class="form-control">
                             </div>
-                            <button class="btn btn-primary">Enviar Documento</button>
+                                    <button class="btn btn-primary" data-action="upload-doc">Enviar Documento</button>
                         </div>
                     </div>
                 </div>
@@ -620,7 +620,7 @@ create_dashboard_html() {
                             <i class="fas fa-file-contract"></i> Documentos Pendentes
                         </div>
                         <div class="card-body">
-                            <ul class="list-group">
+                                    <ul id="pendentes-list" class="list-group">
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     João Santos - Documento assinado
                                     <span class="badge bg-warning rounded-pill">Pendente</span>
@@ -768,7 +768,7 @@ create_dashboard_html() {
             document.querySelectorAll('.page-content').forEach(function(page) {
                 page.classList.remove('active');
             });
-
+            
             // Mostra a página desejada se existir
             var target = document.getElementById(pageName + '-page');
             if (target) {
@@ -779,7 +779,7 @@ create_dashboard_html() {
             document.querySelectorAll('.nav-link').forEach(function(link) {
                 link.classList.remove('active');
             });
-
+            
             if (!linkElement) {
                 // Tenta encontrar o link correspondente pelo href="#<pageName>"
                 linkElement = document.querySelector('.nav-link[href="#' + pageName + '"]');
@@ -887,7 +887,59 @@ create_dashboard_html() {
                     exportRelatoriosPDF();
                     return;
                 }
+
+                if (action === 'upload-doc') {
+                    var user = document.getElementById('doc-user')?.value || 'Usuário';
+                    var type = document.getElementById('doc-type')?.value || 'Documento';
+                    var fileInput = document.getElementById('doc-file');
+                    var fileName = (fileInput && fileInput.files[0]) ? fileInput.files[0].name : 'arquivo.ext';
+                    var lista = document.getElementById('pendentes-list');
+                    if (lista) {
+                        var li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        li.innerHTML = user + ' - ' + type + ' (' + fileName + ')' +
+                          '<span class="badge bg-info rounded-pill">Enviado</span>';
+                        lista.prepend(li);
+                    }
+                    alert('Upload simulado: ' + fileName);
+                    return;
+                }
             });
+
+            // Filtro de busca no Dashboard por login
+            var searchInput = document.getElementById('dashboard-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    var term = this.value.toLowerCase();
+                    document.querySelectorAll('#dashboard-users-tbody tr').forEach(function(row){
+                        var login = (row.cells[0]?.textContent || '').toLowerCase();
+                        row.style.display = login.includes(term) ? '' : 'none';
+                    });
+                });
+            }
+
+            // Atualiza contadores com base nas tabelas
+            function updateCounters() {
+                var usuariosRows = document.querySelectorAll('#usuarios-tbody tr');
+                var total = usuariosRows.length;
+                var docsOk = document.querySelectorAll('#dashboard-users-tbody .status-ok').length;
+                var pend = document.querySelectorAll('#dashboard-users-tbody .status-pendente').length;
+                var exp = document.querySelectorAll('#dashboard-users-tbody .text-danger').length;
+                var setText = function(sel, val){ var el = document.querySelector(sel); if (el) el.textContent = String(val); };
+                setText('#total-users-count', total);
+                setText('#docs-ok-count', docsOk);
+                setText('#pendentes-count', pend);
+                setText('#expirados-count', exp);
+            }
+
+            updateCounters();
+
+            // Hook nas mutações das tabelas para manter os contadores atualizados
+            var observer = new MutationObserver(updateCounters);
+            var dashTable = document.getElementById('dashboard-users-tbody');
+            var usersTable = document.getElementById('usuarios-tbody');
+            if (dashTable) observer.observe(dashTable, { childList: true, subtree: true });
+            if (usersTable) observer.observe(usersTable, { childList: true, subtree: true });
         });
 
         // Exporta a seção de Relatórios para PDF
