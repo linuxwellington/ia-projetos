@@ -228,11 +228,15 @@ create_dashboard_html() {
             padding-top: 20px;
             z-index: 1000;
             overflow-y: auto;
+            width: 250px;
+            left: 0;
+            top: 0;
         }
         
         .main-content {
             margin-left: 250px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
         }
         
         .card {
@@ -318,11 +322,37 @@ create_dashboard_html() {
         .page-content.active {
             display: block;
         }
+
+        /* Botão toggle (visível no mobile) */
+        #sidebarToggle {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1100;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Colapso lateral (desktop) */
+        .sidebar.sidebar-collapsed { width: 70px; }
+        .main-content.sidebar-collapsed { margin-left: 70px; }
+
+        /* Responsividade */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.sidebar-open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+        }
     </style>
 </head>
 <body>
+    <button id="sidebarToggle" class="btn btn-light d-md-none" aria-label="Alternar menu" title="Menu">
+        <i class="fas fa-bars"></i>
+    </button>
     <!-- Sidebar -->
-    <div class="sidebar col-md-2">
+    <div id="sidebar" class="sidebar col-md-2">
         <div class="text-center mb-4">
             <h4><i class="fas fa-shield-alt"></i> OpenVPN Audit</h4>
             <small>Sistema de Auditoria</small>
@@ -766,6 +796,21 @@ create_dashboard_html() {
 
             // Ouve mudanças no hash
             window.addEventListener('hashchange', handleHashChange);
+
+            // Toggle sidebar em telas pequenas
+            var toggleBtn = document.getElementById('sidebarToggle');
+            var sidebar = document.getElementById('sidebar');
+            var mainContent = document.querySelector('.main-content');
+            if (toggleBtn && sidebar && mainContent) {
+                toggleBtn.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        sidebar.classList.toggle('sidebar-open');
+                    } else {
+                        sidebar.classList.toggle('sidebar-collapsed');
+                        mainContent.classList.toggle('sidebar-collapsed');
+                    }
+                });
+            }
 
             // Handlers básicos dos botões por data-action (simulação)
             document.body.addEventListener('click', function(e) {
