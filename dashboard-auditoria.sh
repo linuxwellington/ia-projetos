@@ -330,27 +330,27 @@ create_dashboard_html() {
         <hr class="bg-light">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link active" href="#" onclick="showPage('dashboard')">
+                <a class="nav-link active" href="#dashboard" onclick="showPage('dashboard', this); return false;">
                     <i class="fas fa-home me-2"></i> Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="showPage('usuarios')">
+                <a class="nav-link" href="#usuarios" onclick="showPage('usuarios', this); return false;">
                     <i class="fas fa-users me-2"></i> Usuários
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="showPage('documentos')">
+                <a class="nav-link" href="#documentos" onclick="showPage('documentos', this); return false;">
                     <i class="fas fa-file-alt me-2"></i> Documentos
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="showPage('alertas')">
+                <a class="nav-link" href="#alertas" onclick="showPage('alertas', this); return false;">
                     <i class="fas fa-bell me-2"></i> Alertas
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="showPage('relatorios')">
+                <a class="nav-link" href="#relatorios" onclick="showPage('relatorios', this); return false;">
                     <i class="fas fa-chart-bar me-2"></i> Relatórios
                 </a>
             </li>
@@ -371,7 +371,7 @@ create_dashboard_html() {
                         <i class="fas fa-search"></i>
                         <input type="text" class="border-0" placeholder="Buscar usuários..." id="dashboard-search">
                     </div>
-                    <button class="btn btn-primary" onclick="showPage('usuarios')">
+                    <button class="btn btn-primary" onclick="showPage('usuarios'); return false;">
                         <i class="fas fa-plus"></i> Novo Usuário
                     </button>
                 </div>
@@ -435,7 +435,7 @@ create_dashboard_html() {
                                             <td class="text-danger"><strong>31/12/2023</strong></td>
                                             <td><span class="status-badge status-ok">OK</span></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-danger">
+                                                <button class="btn btn-sm btn-outline-danger" data-action="desativar-usuario">
                                                     <i class="fas fa-user-times"></i> Desativar
                                                 </button>
                                             </td>
@@ -446,7 +446,7 @@ create_dashboard_html() {
                                             <td>03/01/2024</td>
                                             <td><span class="status-badge status-ok">OK</span></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-warning">
+                                                <button class="btn btn-sm btn-outline-warning" data-action="editar-usuario">
                                                     <i class="fas fa-edit"></i> Editar
                                                 </button>
                                             </td>
@@ -457,7 +457,7 @@ create_dashboard_html() {
                                             <td>07/01/2024</td>
                                             <td><span class="status-badge status-pendente">Faltando</span></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-info">
+                                                <button class="btn btn-sm btn-outline-info" data-action="lembrar-usuario">
                                                     <i class="fas fa-bell"></i> Lembrar
                                                 </button>
                                             </td>
@@ -719,29 +719,64 @@ create_dashboard_html() {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Função para mostrar página
-        function showPage(pageName) {
-            // Esconder todas as páginas
-            document.querySelectorAll('.page-content').forEach(page => {
+        // Navegação por hash + alternância de páginas
+        function showPage(pageName, linkElement) {
+            // Atualiza o hash sem rolar a página
+            if (pageName && ('#' + pageName) !== window.location.hash) {
+                history.replaceState(null, '', '#' + pageName);
+            }
+
+            // Esconde todas as páginas
+            document.querySelectorAll('.page-content').forEach(function(page) {
                 page.classList.remove('active');
             });
-            
-            // Remover classe active de todos os links
-            document.querySelectorAll('.nav-link').forEach(link => {
+
+            // Mostra a página desejada se existir
+            var target = document.getElementById(pageName + '-page');
+            if (target) {
+                target.classList.add('active');
+            }
+
+            // Atualiza navegação ativa
+            document.querySelectorAll('.nav-link').forEach(function(link) {
                 link.classList.remove('active');
             });
-            
-            // Mostrar a página selecionada
-            document.getElementById(pageName + '-page').classList.add('active');
-            
-            // Adicionar classe active ao link selecionado
-            event.currentTarget.classList.add('active');
+
+            if (!linkElement) {
+                // Tenta encontrar o link correspondente pelo href="#<pageName>"
+                linkElement = document.querySelector('.nav-link[href="#' + pageName + '"]');
+            }
+            if (linkElement) {
+                linkElement.classList.add('active');
+            }
         }
-        
-        // Função para inicializar a página
+
+        function handleHashChange() {
+            var hash = (window.location.hash || '#dashboard').replace('#', '');
+            showPage(hash);
+        }
+
+        // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
-            // Ativar o primeiro link
-            document.querySelector('.nav-link').classList.add('active');
+            // Inicializa pela rota do hash
+            handleHashChange();
+
+            // Ouve mudanças no hash
+            window.addEventListener('hashchange', handleHashChange);
+
+            // Handlers básicos dos botões por data-action (simulação)
+            document.body.addEventListener('click', function(e) {
+                var btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                var action = btn.getAttribute('data-action');
+                if (action === 'desativar-usuario') {
+                    alert('Usuário desativado (simulação).');
+                } else if (action === 'editar-usuario') {
+                    alert('Abrindo edição do usuário (simulação).');
+                } else if (action === 'lembrar-usuario') {
+                    alert('Lembrete enviado (simulação).');
+                }
+            });
         });
     </script>
 </body>
