@@ -497,6 +497,7 @@ create_dashboard_html() {
                                     <thead>
                                         <tr>
                                             <th>Login</th>
+                                            <th>Numero da OS</th>
                                             <th>Data Início</th>
                                             <th>Data Fim</th>
                                             <th>Status</th>
@@ -506,6 +507,7 @@ create_dashboard_html() {
                                     <tbody>
                                         <tr>
                                             <td>carlos.silva</td>
+                                            <td>OS-12345</td>
                                             <td>01/01/2023</td>
                                             <td>31/12/2023</td>
                                             <td><span class="status-badge status-ok">Ativo</span></td>
@@ -520,6 +522,7 @@ create_dashboard_html() {
                                         </tr>
                                         <tr>
                                             <td>maria.oliveira</td>
+                                            <td>OS-67890</td>
                                             <td>15/03/2023</td>
                                             <td>03/01/2024</td>
                                             <td><span class="status-badge status-ok">Ativo</span></td>
